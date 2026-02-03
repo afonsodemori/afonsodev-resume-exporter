@@ -5,3 +5,7 @@ build:
 
 	@echo "Building for macOS..."
 	GOOS=darwin GOARCH=amd64 go build -o bin/main-darwin main.go
+
+.PHONY: run
+run:
+	go run main.go

@@ -32,7 +32,7 @@ func downloadDoc(docID, format, outputDir, lang string) error {
 		return err
 	}
 
-	filename := filepath.Join(outputDir, fmt.Sprintf("resume-%s-afonso_de_mori.%s", lang, format))
+	filename := filepath.Join(outputDir, fmt.Sprintf("%s.%s", lang, format))
 	out, err := os.Create(filename)
 	if err != nil {
 		return err
