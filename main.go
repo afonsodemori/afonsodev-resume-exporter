@@ -81,10 +81,16 @@ func main() {
 
 			if _, err := os.Stat(newFilename); err == nil {
 				ctx := context.TODO()
+
+				// TODO: Temporary hack to avoid 404 for now.
+				r2KeyLegacy := fmt.Sprintf("resume-%s-afonso_de_mori.%s", lang, format)
+				if err := UploadToR2(ctx, newFilename, r2KeyLegacy); err != nil {
+					panic(fmt.Sprintf("Error uploading %s to R2: %v", r2KeyLegacy, err))
+				}
+
 				r2Key := fmt.Sprintf("afonso-de-mori-cv-%s.%s", lang, format)
 				if err := UploadToR2(ctx, newFilename, r2Key); err != nil {
-					fmt.Printf("Error uploading %s to R2: %v\n", newFilename, err)
-					continue
+					panic(fmt.Sprintf("Error uploading %s to R2: %v", r2Key, err))
 				}
 
 				if _, err := os.Stat(oldFilename); err == nil {
