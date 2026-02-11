@@ -1,4 +1,4 @@
 .env
 .DS_Store
 .data
-bin/
+afonso-dev-resume-exporter-*

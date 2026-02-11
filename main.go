@@ -2,11 +2,42 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 )
+
+func LoadDocumentsConfig() (map[string]string, []string) {
+	idsJSON := os.Getenv("DOCUMENT_IDS")
+	if idsJSON == "" {
+		panic("DOCUMENT_IDS environment variable is not set")
+	}
+
+	var documentIds map[string]string
+	if err := json.Unmarshal([]byte(idsJSON), &documentIds); err != nil {
+		panic(fmt.Sprintf("Failed to parse DOCUMENT_IDS: %v", err))
+	}
+	if len(documentIds) == 0 {
+		panic("DOCUMENT_IDS must contain at least one document ID")
+	}
+
+	formatsJSON := os.Getenv("DOCUMENT_FORMATS")
+	if formatsJSON == "" {
+		panic("DOCUMENT_FORMATS environment variable is not set")
+	}
+
+	var formats []string
+	if err := json.Unmarshal([]byte(formatsJSON), &formats); err != nil {
+		panic(fmt.Sprintf("Failed to parse DOCUMENT_FORMATS: %v", err))
+	}
+	if len(formats) == 0 {
+		panic("DOCUMENT_FORMATS must contain at least one format")
+	}
+
+	return documentIds, formats
+}
 
 func main() {
 	now := time.Now()
@@ -14,16 +45,9 @@ func main() {
 	fmt.Println(formattedTime)
 
 	outputDir := ".data"
+	documentIds, formats := LoadDocumentsConfig()
 
-	documentsIds := map[string]string{
-		"en": "1aYKfrRKX0YHVZukZvMGe3cXTOIY648ZXwF3iXTGQF34",
-		"es": "1TT9BpFpy6QBs1sygecTuPAHD8iPMPII1y3Rw7rNuj74",
-		"pt": "1hWho1MfmHPZIXEARbHaZJydXULzVoTqSnMi0Z64dOq8",
-	}
-
-	formats := []string{"pdf", "docx", "txt", "odt", "md"}
-
-	for lang, documentId := range documentsIds {
+	for lang, documentId := range documentIds {
 		fmt.Println("\n=>", lang)
 		firstFormatProcessed := false
 		skipCurrentDocumentId := false
@@ -74,7 +98,7 @@ func main() {
 	}
 
 	fmt.Println("\n=> Uploading new versions to Cloudflare R2 (if any)...")
-	for lang := range documentsIds {
+	for lang := range documentIds {
 		for _, format := range formats {
 			newFilename := filepath.Join(outputDir, fmt.Sprintf("%s-new.%s", lang, format))
 			oldFilename := filepath.Join(outputDir, fmt.Sprintf("%s.%s", lang, format))
