@@ -1,4 +1,5 @@
 {
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "[go]": {
     "editor.formatOnSave": true,
@@ -6,5 +7,8 @@
   },
   "gopls": {
     "formatting.gofumpt": true
+  },
+  "[shellscript]": {
+    "editor.defaultFormatter": "mkhl.shfmt"
   }
 }

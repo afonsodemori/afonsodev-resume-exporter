@@ -1,0 +1,24 @@
+{
+  "name": "afonsodev-resume-exporter",
+  "dockerComposeFile": "compose.yml",
+  "service": "app",
+  "workspaceFolder": "/app",
+
+  "mounts": [
+    "source=gemini,target=/home/vscode/.gemini,type=volume",
+    "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"
+  ],
+
+  "features": {
+    "ghcr.io/devcontainers/features/go:1": { "version": "1.25.6" },
+    "ghcr.io/devcontainers/features/node:1": { "version": "24" }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": ["golang.go", "esbenp.prettier-vscode", "EditorConfig.EditorConfig", "mkhl.shfmt"]
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/install.sh"
+}
