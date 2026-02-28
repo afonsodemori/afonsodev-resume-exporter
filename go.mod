@@ -1,4 +1,4 @@
-module afonso-dev-resume-exporter
+module github.com/afonsodemori/afonsodev-resume-exporter
 
 go 1.25.6
 
