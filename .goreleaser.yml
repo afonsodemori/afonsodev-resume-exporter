@@ -1,0 +1,44 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -X github.com/afonsodemori/afonsodev-resume-updater/cmd.version={{.Version}}
+      - -X github.com/afonsodemori/afonsodev-resume-updater/cmd.commit={{.ShortCommit}}
+      - -X github.com/afonsodemori/afonsodev-resume-updater/cmd.date={{.CommitDate}}
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+nfpms:
+  - maintainer: 'Afonso de Mori <me@afonso.dev>'
+    description: 'Exports resume documents from Google Docs and uploads new versions to Cloudflare R2.'
+    homepage: 'https://github.com/afonsodemori/afonsodev-resume-updater'
+    license: MIT
+    formats:
+      - apk
+      - deb
+      - rpm
+    bindir: /usr/bin
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^chore:'
+      - '^test:'
+
+release:
+  footer: >-
+
+    ---
+
+    Released by [GoReleaser](https://github.com/goreleaser/goreleaser).

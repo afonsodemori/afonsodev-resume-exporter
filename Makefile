@@ -5,12 +5,15 @@ run:
 	go run .
 
 clear:
-	rm -rf .data/*
+	rm -rf .data/* dist/*
 
-build:
-	@echo "Building for Linux..."
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o afonsodev-resume-updater-linux-arm64 .
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o afonsodev-resume-updater-linux-amd64 .
-	@echo "Building for macOS..."
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o afonsodev-resume-updater-darwin-amd64 .
-	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o afonsodev-resume-updater-darwin-arm64 .
+build-snapshot:
+	@echo "Building SNAPSHOT with GoReleaser..."
+	@goreleaser build --clean --auto-snapshot
+
+release-test:
+	@goreleaser release --clean --auto-snapshot --skip=publish
+
+run-builded:
+	@echo "Running the built binary..."
+	@dist/afonsodev-resume-updater_linux_arm64_v8.0/afonsodev-resume-updater
