@@ -55,4 +55,4 @@ Only the **first format** in `DOCUMENT_FORMATS` is used to compare new vs existi
 
 ## CI/CD
 
-Triggered on `v*.*.*` tags. Builds binaries for linux/darwin/windows × amd64/arm64, creates a GitHub release with all artifacts, and deploys the linux-amd64 binary to a remote server via SSH (symlinking it as `afonsodev-resume-exporter`).
+Triggered on `v*.*.*` tags. Builds binaries for linux/darwin/windows × amd64/arm64, creates a GitHub release with all artifacts, and deploys the linux-amd64 binary to a remote server via SSH (symlinking it as `afonsodev-resume-updater`).

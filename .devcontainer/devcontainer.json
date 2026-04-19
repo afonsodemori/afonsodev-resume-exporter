@@ -1,8 +1,8 @@
 {
-  "name": "afonsodev-resume-exporter",
+  "name": "afonsodev-resume-updater",
   "dockerComposeFile": "compose.yml",
   "service": "app",
-  "workspaceFolder": "/afonsodev-resume-exporter",
+  "workspaceFolder": "/afonsodev-resume-updater",
 
   "mounts": [
     // cli
@@ -12,7 +12,7 @@
     "source=${localEnv:HOME}/.claude.json,target=/home/vscode/.claude.json,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
     // source code
-    "source=${localWorkspaceFolder},target=/afonsodev-resume-exporter,type=bind,consistency=cached"
+    "source=${localWorkspaceFolder},target=/afonsodev-resume-updater,type=bind,consistency=cached"
   ],
 
   "customizations": {

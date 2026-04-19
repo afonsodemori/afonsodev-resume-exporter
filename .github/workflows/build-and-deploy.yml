@@ -29,7 +29,7 @@ jobs:
         run: |
           EXT=$([ "${{ matrix.goos }}" = "windows" ] && echo ".exe" || echo "")
           mkdir -p dist
-          go build -o dist/afonsodev-resume-exporter-${{ github.ref_name }}-${{ matrix.goos }}-${{ matrix.goarch }}${EXT}
+          go build -o dist/afonsodev-resume-updater-${{ github.ref_name }}-${{ matrix.goos }}-${{ matrix.goarch }}${EXT}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -86,6 +86,6 @@ jobs:
           port: ${{ vars.SSH_PORT }}
           script: |
             mkdir -p ${{ vars.SSH_BASE_PATH }}
-            chmod +x ${{ vars.SSH_BASE_PATH }}/afonsodev-resume-exporter-${{ github.ref_name }}-linux-amd64
-            ln -sf ${{ vars.SSH_BASE_PATH }}/afonsodev-resume-exporter-${{ github.ref_name }}-linux-amd64 \
-                   ${{ vars.SSH_BASE_PATH }}/afonsodev-resume-exporter
+            chmod +x ${{ vars.SSH_BASE_PATH }}/afonsodev-resume-updater-${{ github.ref_name }}-linux-amd64
+            ln -sf ${{ vars.SSH_BASE_PATH }}/afonsodev-resume-updater-${{ github.ref_name }}-linux-amd64 \
+                   ${{ vars.SSH_BASE_PATH }}/afonsodev-resume-updater
