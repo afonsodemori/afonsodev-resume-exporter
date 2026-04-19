@@ -9,13 +9,15 @@ A Go CLI tool that exports resume documents from Google Docs in multiple formats
 ## Commands
 
 ```bash
-make run      # Run the app (loads .env automatically)
-make build    # Cross-compile for linux/darwin × amd64/arm64
-make clear    # Delete all files in .data/
-go run .      # Run without Makefile
+make run              # Run the app (loads .env automatically)
+make build-snapshot   # Build binaries via GoReleaser (snapshot, no publish)
+make release-test     # Full release dry-run (builds all targets, skips publish)
+make run-builded      # Run the linux/arm64 binary from dist/
+make clear            # Delete .data/* and dist/*
+go run .              # Run without Makefile (requires env vars set manually)
 ```
 
-`make run` and `make build` both require a `.env` file in the project root (the Makefile does `include .env; export`).
+`make run` and `make build-snapshot` both require a `.env` file in the project root (the Makefile does `include .env; export`).
 
 ## Required environment variables
 
@@ -30,12 +32,12 @@ go run .      # Run without Makefile
 
 ## Architecture
 
-All code is in a single `main` package with four files:
+All code is in a single `main` package with four files. There are no tests.
 
-- **`main.go`** — Orchestration. Reads config, calls downloader per (lang, format), compares new vs existing file using the first format only to detect changes, then uploads changed files to R2 under two key names (legacy + current), archives the old version.
-- **`downloader.go`** — Downloads from the Google Docs export API (`/export?format=<fmt>`). Saves as `{lang}-new.{format}`. If format is `md`, also converts to HTML and saves as `{lang}-new.html`.
-- **`uploader.go`** — Uploads to Cloudflare R2 using the AWS SDK v2 with a custom endpoint resolver. Derives MIME type from file extension.
-- **`fileutils.go`** — Binary file comparison (chunk-by-chunk) and file deletion.
+- **`main.go`** — Orchestration. Reads config, calls downloader per (lang, format), compares new vs existing file using the first format only to detect changes, then uploads changed files to R2 under two key names (legacy + current), archives the old version. The R2 uploader is initialized after all downloads complete, so missing R2 credentials only cause a fatal error at upload time.
+- **`downloader.go`** — Downloads from the Google Docs export API (`/export?format=<fmt>`). Saves as `{lang}-new.{format}`. If format is `md`, also auto-generates `{lang}-new.html` via `gomarkdown` — no explicit `html` format entry is needed.
+- **`uploader.go`** — Uploads to Cloudflare R2 using AWS SDK v2. The bucket name is extracted from the path component of `CLOUDFLARE_R2_PUBLIC_API`. MIME type is derived from file extension.
+- **`fileutils.go`** — Binary file comparison (chunk-by-chunk).
 
 ### File naming convention in `.data/`
 
@@ -55,4 +57,4 @@ Only the **first format** in `DOCUMENT_FORMATS` is used to compare new vs existi
 
 ## CI/CD
 
-Triggered on `v*.*.*` tags. Builds binaries for linux/darwin/windows × amd64/arm64, creates a GitHub release with all artifacts, and deploys the linux-amd64 binary to a remote server via SSH (symlinking it as `afonsodev-resume-updater`).
+Triggered on `v*.*.*` tags via GoReleaser. Builds binaries for linux/darwin/windows × amd64/arm64 and creates a GitHub release. After release, triggers a GitLab pipeline (`afonsodemori/packages`) via webhook to deploy the new version — the pipeline receives `APP` and `VERSION` variables and handles the server deployment.
