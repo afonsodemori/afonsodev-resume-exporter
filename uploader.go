@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"mime"
 	"net/url"
 	"os"
@@ -54,7 +55,7 @@ func newR2Uploader() (*r2Uploader, error) {
 }
 
 func (u *r2Uploader) upload(ctx context.Context, filePath, key string) error {
-	fmt.Printf("Uploading %s with key %s... ", filePath, key)
+	log.Printf("uploading %s with key %s...", filePath, key)
 
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -77,6 +78,5 @@ func (u *r2Uploader) upload(ctx context.Context, filePath, key string) error {
 		return fmt.Errorf("failed to upload to R2: %w", err)
 	}
 
-	fmt.Println("OK")
 	return nil
 }

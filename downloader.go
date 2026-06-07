@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,7 +21,7 @@ func downloadDocument(documentID, format, outputDir, lang string) error {
 		format,
 	)
 
-	fmt.Printf("Getting %s... ", url)
+	log.Printf("getting %s...", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -52,14 +53,11 @@ func downloadDocument(documentID, format, outputDir, lang string) error {
 		return err
 	}
 
-	fmt.Println("OK")
-
 	if strings.ToLower(format) == "md" {
-		fmt.Printf("Converting to HTML... ")
+		log.Printf("converting to HTML...")
 		if err := convertMarkdownToHTML(content, outputDir, lang); err != nil {
 			return fmt.Errorf("HTML conversion failed: %w", err)
 		}
-		fmt.Println("OK")
 	}
 
 	return nil

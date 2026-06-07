@@ -50,44 +50,44 @@ func main() {
 	now := time.Now()
 	cfg := loadConfig()
 
-	fmt.Printf("Starting at %s\n", now.Format("2006-01-02 15:04:05"))
+	log.Printf("starting...")
 
 	for lang, documentID := range cfg.documentIDs {
-		fmt.Printf("\n=> %s\n", lang)
+		log.Printf("=> %s", lang)
 
 		firstFormat := cfg.formats[0]
 		newFile := filepath.Join(outputDir, fmt.Sprintf("%s-new.%s", lang, firstFormat))
 		oldFile := filepath.Join(outputDir, fmt.Sprintf("%s.%s", lang, firstFormat))
 
 		if err := downloadDocument(documentID, firstFormat, outputDir, lang); err != nil {
-			fmt.Printf("error: %v\n", err)
+			log.Printf("error: %v", err)
 			continue
 		}
 
 		if _, err := os.Stat(oldFile); err == nil {
 			equal, err := filesEqual(newFile, oldFile)
 			if err != nil {
-				fmt.Printf("error comparing files: %v\n", err)
+				log.Printf("error comparing files: %v", err)
 				continue
 			}
 			if equal {
-				fmt.Printf("%s has no changes.\n", oldFile)
+				log.Printf("%s has no changes.", oldFile)
 				_ = os.Remove(newFile)
 				continue
 			}
-			fmt.Printf("%s has a new version!\n", oldFile)
+			log.Printf("%s has a new version!", oldFile)
 		} else {
-			fmt.Printf("First version of %s created as %s.\n", oldFile, newFile)
+			log.Printf("first version of %s created as %s.", oldFile, newFile)
 		}
 
 		for _, format := range cfg.formats[1:] {
 			if err := downloadDocument(documentID, format, outputDir, lang); err != nil {
-				fmt.Printf("error: %v\n", err)
+				log.Printf("error: %v", err)
 			}
 		}
 	}
 
-	fmt.Println("\n=> Uploading new versions to Cloudflare R2 (if any)...")
+	log.Println("uploading new versions to Cloudflare R2 (if any)...")
 	ctx := context.Background()
 
 	uploader, err := newR2Uploader()
@@ -111,18 +111,18 @@ func main() {
 
 			if _, err := os.Stat(oldFile); err == nil {
 				archiveFile := filepath.Join(outputDir, fmt.Sprintf("%s-%s.%s", lang, now.Format("060102-1504"), format))
-				fmt.Printf("Archiving %s\n", archiveFile)
+				log.Printf("archiving %s", archiveFile)
 				if err := os.Rename(oldFile, archiveFile); err != nil {
-					fmt.Printf("error archiving %s: %v\n", oldFile, err)
+					log.Printf("error archiving %s: %v", oldFile, err)
 					continue
 				}
 			}
 
 			if err := os.Rename(newFile, oldFile); err != nil {
-				fmt.Printf("error renaming %s to %s: %v\n", newFile, oldFile, err)
+				log.Print(err)
 			}
 		}
 	}
 
-	fmt.Println("Done!")
+	log.Println("done!")
 }
