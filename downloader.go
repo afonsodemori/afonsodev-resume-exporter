@@ -21,7 +21,7 @@ func downloadDocument(documentID, format, outputDir, lang string) error {
 		format,
 	)
 
-	log.Printf("getting %s...", url)
+	log.Printf("downloading %s...", url)
 
 	resp, err := http.Get(url)
 	if err != nil {

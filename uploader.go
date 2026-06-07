@@ -20,26 +20,23 @@ type r2Uploader struct {
 	bucketName string
 }
 
-func newR2Uploader() (*r2Uploader, error) {
-	accountID := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
-	accessKeyID := os.Getenv("CLOUDFLARE_R2_ACCESS_KEY_ID")
-	secretKey := os.Getenv("CLOUDFLARE_R2_SECRET_ACCESS_KEY")
-	publicAPI := os.Getenv("CLOUDFLARE_R2_PUBLIC_API")
+func newR2Uploader(cfCfg Cloudflare) (*r2Uploader, error) {
+	accountID := cfCfg.AccountID
+	accessKeyID := cfCfg.R2.AccessKeyID
+	secretAccessKey := cfCfg.R2.SecretAccessKey
+	publicAPI := cfCfg.R2.PublicAPI
 
-	if accountID == "" || accessKeyID == "" || secretKey == "" {
-		return nil, fmt.Errorf("missing Cloudflare R2 credentials (CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_R2_ACCESS_KEY_ID, CLOUDFLARE_R2_SECRET_ACCESS_KEY)")
-	}
-	if publicAPI == "" {
-		return nil, fmt.Errorf("CLOUDFLARE_R2_PUBLIC_API is not set")
+	if accountID == "" || publicAPI == "" || accessKeyID == "" || secretAccessKey == "" {
+		return nil, fmt.Errorf("missing Cloudflare config (AccountID, PublicAPI, AccessKeyID, SecretAccessKey)")
 	}
 
 	u, err := url.Parse(publicAPI)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse CLOUDFLARE_R2_PUBLIC_API: %w", err)
+		return nil, fmt.Errorf("failed to parse Cloudflare.R2.PublicAPI: %w", err)
 	}
 
 	cfg := aws.Config{
-		Credentials: credentials.NewStaticCredentialsProvider(accessKeyID, secretKey, ""),
+		Credentials: credentials.NewStaticCredentialsProvider(accessKeyID, secretAccessKey, ""),
 		Region:      "auto",
 	}
 

@@ -1,0 +1,14 @@
+{
+  "cloudflare": {
+    "account_id": "account_id",
+    "r2": {
+      "public_api": "https://account_id.r2.cloudflarestorage.com/bucket-name",
+      "access_key_id": "access_key_id",
+      "secret_access_key": "secret_access_key"
+    }
+  },
+  "documents": {
+    "list": [{ "name": "downloaded-file-prefix", "id": "hash-from-google-docs" }],
+    "formats": ["pdf", "md"]
+  }
+}
