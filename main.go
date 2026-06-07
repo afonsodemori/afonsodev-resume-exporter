@@ -104,12 +104,6 @@ func main() {
 				continue
 			}
 
-			// Legacy key kept for backwards compatibility with existing URLs.
-			legacyKey := fmt.Sprintf("resume-%s-afonso_de_mori.%s", lang, format)
-			if err := uploader.upload(ctx, newFile, legacyKey); err != nil {
-				log.Fatalf("error uploading %s: %v", legacyKey, err)
-			}
-
 			key := fmt.Sprintf("afonso-de-mori-cv-%s.%s", lang, format)
 			if err := uploader.upload(ctx, newFile, key); err != nil {
 				log.Fatalf("error uploading %s: %v", key, err)
