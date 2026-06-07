@@ -2,36 +2,52 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"time"
 )
 
 func main() {
+	start := time.Now()
+	verbose := flag.Bool("v", false, "enable debug logging")
+	flag.Parse()
+
+	logLevel := slog.LevelInfo
+	if *verbose {
+		logLevel = slog.LevelDebug
+	}
+
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: logLevel,
+	})))
+
 	cfg, err := LoadConfig("config.json")
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("load config failed", "err", err)
+		os.Exit(1)
 	}
 	const outputDir = ".data"
-	now := time.Now()
 
-	log.Printf("starting...")
+	slog.Info("starting")
 
 	uploader, err := newR2Uploader(cfg.Cloudflare)
 	if err != nil {
-		log.Fatalf("failed to initialize R2 uploader: %v", err)
+		slog.Error("failed to initialize R2 uploader", "err", err)
+		os.Exit(1)
 	}
 
 	for _, document := range cfg.Documents.List {
-		log.Printf("=> %s", document.Name)
+		slog.Info("processing", "document", document.Name)
 		for loop, format := range cfg.Documents.Formats {
 			newFile := filepath.Join(outputDir, fmt.Sprintf("%s-new.%s", document.Name, format))
 			oldFile := filepath.Join(outputDir, fmt.Sprintf("%s.%s", document.Name, format))
 
+			slog.Debug("downloading", "document", document.Name, "format", format)
 			if err := downloadDocument(document.ID, format, outputDir, document.Name); err != nil {
-				log.Printf("error: %v", err)
+				slog.Error("download error", "err", err)
 				if loop == 0 {
 					break
 				}
@@ -39,42 +55,44 @@ func main() {
 
 			if loop == 0 {
 				if _, err := os.Stat(oldFile); err != nil {
-					log.Printf("first version of %s created as %s.", oldFile, newFile)
+					slog.Info("first version created", "new_file", newFile)
 				} else {
 					equal, err := filesEqual(oldFile, newFile)
 					if err != nil {
-						log.Printf("error comparing files: %v", err)
+						slog.Error("error comparing files", "err", err)
 						break
 					}
 					if equal {
-						log.Printf("%s has no changes.", oldFile)
+						slog.Info("unchanged")
 						_ = os.Remove(newFile)
 						break
 					}
-					log.Printf("%s has a new version!", oldFile)
+					slog.Info("new version found")
 				}
 			}
 
 			ctx := context.Background()
 			key := fmt.Sprintf("afonso-de-mori-cv-%s.%s", document.Name, format)
+			slog.Debug("uploading", "document", document.Name, "format", format)
 			if err := uploader.upload(ctx, newFile, key); err != nil {
-				log.Fatalf("error uploading %s: %v", key, err)
+				slog.Error("upload error", "file", newFile, "err", err)
+				os.Exit(1)
 			}
 
 			if _, err := os.Stat(oldFile); err == nil {
-				archiveFile := filepath.Join(outputDir, fmt.Sprintf("%s-%s.%s", document.Name, now.Format("060102-1504"), format))
-				log.Printf("archiving %s", archiveFile)
+				archiveFile := filepath.Join(outputDir, fmt.Sprintf("%s-%s.%s", document.Name, start.Format("060102-1504"), format))
+				slog.Debug("archiving", "archive_file", archiveFile)
 				if err := os.Rename(oldFile, archiveFile); err != nil {
-					log.Printf("error archiving %s: %v", oldFile, err)
+					slog.Error("error archiving", "err", err)
 					continue
 				}
 			}
 
 			if err := os.Rename(newFile, oldFile); err != nil {
-				log.Print(err)
+				slog.Error("renaming error", "err", err)
 			}
 		}
 	}
 
-	log.Println("done!")
+	slog.Info("done", "duration_ms", time.Since(start).Milliseconds())
 }

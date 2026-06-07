@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"mime"
 	"net/url"
 	"os"
@@ -52,8 +51,6 @@ func newR2Uploader(cfCfg Cloudflare) (*r2Uploader, error) {
 }
 
 func (u *r2Uploader) upload(ctx context.Context, filePath, key string) error {
-	log.Printf("uploading %s with key %s...", filePath, key)
-
 	file, err := os.Open(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to open file %s: %w", filePath, err)

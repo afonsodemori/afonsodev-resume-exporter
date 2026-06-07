@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,8 +20,6 @@ func downloadDocument(documentID, format, outputDir, lang string) error {
 		documentID,
 		format,
 	)
-
-	log.Printf("downloading %s...", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -54,7 +52,7 @@ func downloadDocument(documentID, format, outputDir, lang string) error {
 	}
 
 	if strings.ToLower(format) == "md" {
-		log.Printf("converting to HTML...")
+		slog.Debug("converting to HTML...")
 		if err := convertMarkdownToHTML(content, outputDir, lang); err != nil {
 			return fmt.Errorf("HTML conversion failed: %w", err)
 		}
@@ -63,6 +61,7 @@ func downloadDocument(documentID, format, outputDir, lang string) error {
 	return nil
 }
 
+// TODO: Downloader should not manage conversion
 func convertMarkdownToHTML(mdContent []byte, outputDir, lang string) error {
 	extensions := parser.CommonExtensions | parser.AutoHeadingIDs
 	p := parser.NewWithExtensions(extensions)
