@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"slices"
+	"strings"
 	"time"
 )
 
@@ -46,6 +48,11 @@ func main() {
 		for loop, format := range cfg.Documents.Formats {
 			newFile := document.NewPath(format)
 			oldFile := document.CurrentPath(format)
+
+			if format == "html" {
+				// TODO: Temporary hack. Generated from MD. Do not download HTML.
+				continue
+			}
 
 			slog.Debug("downloading", "document", document.Name, "format", format)
 			if err := downloadDocument(document.ID, format, document.dirs.Output, document.Name); err != nil {
@@ -92,6 +99,31 @@ func main() {
 
 			if err := os.Rename(newFile, oldFile); err != nil {
 				slog.Error("renaming error", "err", err)
+			}
+
+			if format == "md" && slices.Contains(cfg.Documents.Formats, "html") {
+				// TODO: Temporary hack. Upload the HTML generated from MD.
+				format := "html"
+				newFile := strings.Replace(newFile, ".md", ".html", 1)
+				key := fmt.Sprintf("afonso-de-mori-cv-%s.%s", document.Name, format)
+				slog.Debug("uploading", "document", document.Name, "format", format)
+				if err := uploader.upload(ctx, newFile, key); err != nil {
+					slog.Error("upload error", "file", newFile, "err", err)
+					os.Exit(1)
+				}
+
+				if _, err := os.Stat(oldFile); err == nil {
+					archiveFile := document.ArchivePath(format)
+					slog.Debug("archiving", "archive_file", archiveFile)
+					if err := os.Rename(oldFile, archiveFile); err != nil {
+						slog.Error("error archiving", "err", err)
+						continue
+					}
+				}
+
+				if err := os.Rename(newFile, oldFile); err != nil {
+					slog.Error("renaming error", "err", err)
+				}
 			}
 		}
 	}
