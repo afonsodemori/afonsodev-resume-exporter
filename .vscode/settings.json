@@ -1,6 +1,9 @@
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
+  "files.associations": {
+    ".json.example": "json"
+  },
   "[go]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "golang.go"
