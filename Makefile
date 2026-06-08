@@ -1,5 +1,5 @@
 run:
-	go run .
+	go run . -v
 
 clear:
 	rm -rf .data/* dist/*

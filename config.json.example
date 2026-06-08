@@ -9,6 +9,10 @@
   },
   "documents": {
     "list": [{ "name": "downloaded-file-prefix", "id": "hash-from-google-docs" }],
-    "formats": ["pdf", "md"]
+    "formats": ["pdf", "md"],
+    "dirs": {
+      "output": ".data",
+      "archive": ".data/.archive"
+    }
   }
 }

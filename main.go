@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"path/filepath"
 	"time"
 )
 
@@ -29,7 +28,10 @@ func main() {
 		slog.Error("load config failed", "err", err)
 		os.Exit(1)
 	}
-	const outputDir = ".data"
+	if err := os.MkdirAll(cfg.Documents.Dirs.Archive, 0o755); err != nil {
+		slog.Error("failed to create archive dir", "err", err)
+		os.Exit(1)
+	}
 
 	slog.Info("starting")
 
@@ -42,11 +44,11 @@ func main() {
 	for _, document := range cfg.Documents.List {
 		slog.Info("processing", "document", document.Name)
 		for loop, format := range cfg.Documents.Formats {
-			newFile := filepath.Join(outputDir, fmt.Sprintf("%s-new.%s", document.Name, format))
-			oldFile := filepath.Join(outputDir, fmt.Sprintf("%s.%s", document.Name, format))
+			newFile := document.NewPath(format)
+			oldFile := document.CurrentPath(format)
 
 			slog.Debug("downloading", "document", document.Name, "format", format)
-			if err := downloadDocument(document.ID, format, outputDir, document.Name); err != nil {
+			if err := downloadDocument(document.ID, format, document.dirs.Output, document.Name); err != nil {
 				slog.Error("download error", "err", err)
 				if loop == 0 {
 					break
@@ -80,7 +82,7 @@ func main() {
 			}
 
 			if _, err := os.Stat(oldFile); err == nil {
-				archiveFile := filepath.Join(outputDir, fmt.Sprintf("%s-%s.%s", document.Name, start.Format("060102-1504"), format))
+				archiveFile := document.ArchivePath(format)
 				slog.Debug("archiving", "archive_file", archiveFile)
 				if err := os.Rename(oldFile, archiveFile); err != nil {
 					slog.Error("error archiving", "err", err)
