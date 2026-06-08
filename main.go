@@ -105,6 +105,7 @@ func main() {
 				// TODO: Temporary hack. Upload the HTML generated from MD.
 				format := "html"
 				newFile := strings.Replace(newFile, ".md", ".html", 1)
+				oldFile := strings.Replace(oldFile, ".md", ".html", 1)
 				key := fmt.Sprintf("afonso-de-mori-cv-%s.%s", document.Name, format)
 				slog.Debug("uploading", "document", document.Name, "format", format)
 				if err := uploader.upload(ctx, newFile, key); err != nil {
