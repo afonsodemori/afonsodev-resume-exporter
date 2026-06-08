@@ -11,7 +11,6 @@ import (
 
 func main() {
 	start := time.Now()
-	slog.Info("starting")
 
 	verbose := flag.Bool("v", false, "enable debug logging")
 	flag.Parse()
@@ -21,9 +20,11 @@ func main() {
 		logLevel = slog.LevelDebug
 	}
 
-	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: logLevel,
 	})))
+
+	slog.Info("starting...")
 
 	cfg, err := LoadConfig("config.json")
 	if err != nil {
