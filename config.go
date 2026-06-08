@@ -41,7 +41,7 @@ type Document struct {
 	dirs Dirs   // injected after parse
 }
 
-func (d Document) NewPath(format string) string {
+func (d Document) DownloadPath(format string) string {
 	return filepath.Join(d.dirs.Output, fmt.Sprintf("%s-new.%s", d.Name, format))
 }
 

@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"slices"
-	"strings"
 	"time"
 )
 
 func main() {
 	start := time.Now()
+	slog.Info("starting")
+
 	verbose := flag.Bool("v", false, "enable debug logging")
 	flag.Parse()
 
@@ -35,96 +35,68 @@ func main() {
 		os.Exit(1)
 	}
 
-	slog.Info("starting")
-
 	uploader, err := newR2Uploader(cfg.Cloudflare)
 	if err != nil {
 		slog.Error("failed to initialize R2 uploader", "err", err)
 		os.Exit(1)
 	}
 
+	slog.Info("downloads...")
 	for _, document := range cfg.Documents.List {
-		slog.Info("processing", "document", document.Name)
 		for loop, format := range cfg.Documents.Formats {
-			newFile := document.NewPath(format)
-			oldFile := document.CurrentPath(format)
+			downloadPath := document.DownloadPath(format)
+			currentPath := document.CurrentPath(format)
 
 			if format == "html" {
 				// TODO: Temporary hack. Generated from MD. Do not download HTML.
 				continue
 			}
 
-			slog.Debug("downloading", "document", document.Name, "format", format)
+			slog.Debug("downloads", "document", document.Name, "format", format)
 			if err := downloadDocument(document.ID, format, document.dirs.Output, document.Name); err != nil {
 				slog.Error("download error", "err", err)
-				if loop == 0 {
-					break
-				}
+				os.Exit(1)
 			}
 
 			if loop == 0 {
-				if _, err := os.Stat(oldFile); err != nil {
-					slog.Info("first version created", "new_file", newFile)
+				if _, err := os.Stat(currentPath); err != nil {
+					slog.Info("first version created", "document", document.Name)
 				} else {
-					equal, err := filesEqual(oldFile, newFile)
+					equal, err := filesEqual(currentPath, downloadPath)
 					if err != nil {
 						slog.Error("error comparing files", "err", err)
 						break
 					}
 					if equal {
-						slog.Info("unchanged")
-						_ = os.Remove(newFile)
+						slog.Debug("unchanged")
+						_ = os.Remove(downloadPath)
 						break
 					}
-					slog.Info("new version found")
+					slog.Info("new version found", "document", document.Name)
 				}
 			}
+		}
+	}
 
-			ctx := context.Background()
-			key := fmt.Sprintf("afonso-de-mori-cv-%s.%s", document.Name, format)
-			slog.Debug("uploading", "document", document.Name, "format", format)
-			if err := uploader.upload(ctx, newFile, key); err != nil {
-				slog.Error("upload error", "file", newFile, "err", err)
-				os.Exit(1)
-			}
+	slog.Info("uploads...")
+	for _, document := range cfg.Documents.List {
+		for _, format := range cfg.Documents.Formats {
+			downloadPath := document.DownloadPath(format)
+			currentPath := document.CurrentPath(format)
 
-			if _, err := os.Stat(oldFile); err == nil {
-				archiveFile := document.ArchivePath(format)
-				slog.Debug("archiving", "archive_file", archiveFile)
-				if err := os.Rename(oldFile, archiveFile); err != nil {
-					slog.Error("error archiving", "err", err)
-					continue
-				}
-			}
-
-			if err := os.Rename(newFile, oldFile); err != nil {
-				slog.Error("renaming error", "err", err)
-			}
-
-			if format == "md" && slices.Contains(cfg.Documents.Formats, "html") {
-				// TODO: Temporary hack. Upload the HTML generated from MD.
-				format := "html"
-				newFile := strings.Replace(newFile, ".md", ".html", 1)
-				oldFile := strings.Replace(oldFile, ".md", ".html", 1)
+			if _, err := os.Stat(downloadPath); err == nil {
+				ctx := context.Background()
 				key := fmt.Sprintf("afonso-de-mori-cv-%s.%s", document.Name, format)
 				slog.Debug("uploading", "document", document.Name, "format", format)
-				if err := uploader.upload(ctx, newFile, key); err != nil {
-					slog.Error("upload error", "file", newFile, "err", err)
+				if err := uploader.upload(ctx, downloadPath, key); err != nil {
+					slog.Error("upload error", "file", downloadPath, "err", err)
 					os.Exit(1)
 				}
 
-				if _, err := os.Stat(oldFile); err == nil {
-					archiveFile := document.ArchivePath(format)
-					slog.Debug("archiving", "archive_file", archiveFile)
-					if err := os.Rename(oldFile, archiveFile); err != nil {
-						slog.Error("error archiving", "err", err)
-						continue
-					}
-				}
-
-				if err := os.Rename(newFile, oldFile); err != nil {
-					slog.Error("renaming error", "err", err)
-				}
+				archivePath := document.ArchivePath(format)
+				slog.Debug("archiving", "from", currentPath, "to", archivePath)
+				_ = os.Rename(currentPath, archivePath)
+				_ = os.Rename(downloadPath, currentPath)
 			}
 		}
 	}
